@@ -18,9 +18,9 @@ const fetchTodos = async () => {
 
 
 //update a Todo
-const updateTodo = async(id, content) => {
+const updateTodo = async(id, title, description) => {
 try {
-    const res = await axios.patch(`${BASE_URL}/${UPDATE_TODO_URL}/${id}`, {content});
+    const res = await axios.patch(`${BASE_URL}/${UPDATE_TODO_URL}/${id}`, {title, description});
     return res.data;
 } catch (error) {
     console.error('Error updating todo:', error);
@@ -30,9 +30,9 @@ try {
 
 
 //add a todo
-const addTodo = async(content) => {
+const addTodo = async(title, description) => {
 try {
-    const res = await axios.post(`${BASE_URL}/${ADD_TODO_URL}`, {content});
+    const res = await axios.post(`${BASE_URL}/${ADD_TODO_URL}`, {title, description});
     return res.data;
 } catch (error) {
     console.error('Error adding todo:', error);
@@ -41,7 +41,7 @@ try {
 }
 
 // delete a todo
-const deleteTodo = async() => {
+const deleteTodo = async(id) => {
    try {
      const res = await axios.post(`${BASE_URL}/${
         DELETE_TODO_URL
