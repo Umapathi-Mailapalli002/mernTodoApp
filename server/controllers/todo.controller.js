@@ -47,7 +47,6 @@ const updateTodo = async (req, res) => {
   const { _id } = req.params;
   
   if (!_id || !isValidObjectId(_id)) {
-    console.log(_id);
     console.log("it is not a valid object id");
     return res.status(400).json({ error: "Invalid Object ID" });
 }
@@ -75,6 +74,30 @@ const updateTodo = async (req, res) => {
   }
 };
 
+const toggleIsComplete = async (req, res) => {
+  try {
+    const {isCompleted} = req.body;
+    const toggleCompleted = Todo.findByIdAndUpdate(
+      {$set: {
+        isCompleted
+      }},
+      {new: true}
+    );
+    if (!toggleCompleted) {
+      return res
+      .status(404)
+      .json({error: "todo not found to toggle"})
+    }
+    return res
+      .status(404)
+      .json({msg: "successfully toggled", data: toggleCompleted})
+  } catch (error) {
+    return res
+    .status(500)
+    .json({error: "error on toogle isCompleted"})
+  }
+}
+
 const deleteTodo = async (req, res) => {
   const { _id } = req.params;
   try {
@@ -93,4 +116,4 @@ const deleteTodo = async (req, res) => {
   }
 };
 
-export { getAllTodos, addTodo, updateTodo, deleteTodo };
+export { getAllTodos, addTodo, updateTodo, deleteTodo, toggleIsComplete };

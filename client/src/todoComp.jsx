@@ -94,7 +94,7 @@ function todoComp() {
   };
 
   //mark as complete todo
-  const handleComplete = (id) => {
+  const handleCompleteToogle = (id, isCompleted) => {
     let now = new Date();
     let dd = now.getDate();
     let mm = now.getMonth();
@@ -104,11 +104,12 @@ function todoComp() {
     let s = now.getSeconds();
     const completedOn =
       dd + "-" + mm + "-" + yyyy + " at " + h + ":" + m + ":" + s;
-    const completedTodos = todos.find((todo) => todo.id === id);
+      const matchid = id;
+    const completedTodos = todos.find((todo) => todo._id === matchid);
     if (completedTodos) {
-      
+      completedTodos.isCompleted = true;
     }
-    handleDelete(id);
+    console.log(isCompleted)
   };
 
   //todo tasks
@@ -221,7 +222,7 @@ function todoComp() {
                   className="mx-1 text-xl cursor-pointer hover:text-[rgb(4,196,106)] sm:mr-2 md:mr-2 lg:mr-2"
                 />
                 <FaCheck
-                  onClick={() => handleComplete(todo._id, todo.isCompleted)}
+                  onClick={() => handleCompleteToogle(todo._id, todo.isCompleted)}
                   className="text-2xl cursor-pointer ml-1  text-[rgb(0,230,122)] hover:text-[rgb(4,196,106)] sm:mr-2 md:mr-2 lg:mr-2 mx-1"
                 />
                 <MdDeleteOutline

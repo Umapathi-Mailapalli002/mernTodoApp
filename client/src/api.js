@@ -3,6 +3,7 @@ import axios from "axios";
 const API_URL = '/get-todos'; // Base URL for getting todos
 const ADD_TODO_URL = '/add-todo'; // URL for adding a todo
 const UPDATE_TODO_URL = '/update-todo'; // Base URL for updating a todo
+const TOGGLE_COMPLETE = '/toggle-complete'; // Base URL for updating a todo
 const DELETE_TODO_URL = '/delete-todo'; // Base URL for deleting a todo
 const BASE_URL = "http://localhost:8000/api/v1";
 //fetch todos
