@@ -1,8 +1,9 @@
+import mongoose, { isValidObjectId } from "mongoose";
 import { Todo } from "../models/todo.model.js";
 
 const getAllTodos = async (req, res) => {
   try {
-    const todos = await Todo.find({});
+    const todos = await Todo.find().sort({ createdAt:-1 });
     if (!todos) {
       return res.status(200).json({ null: "there is no todo to fetch" });
     }
@@ -44,9 +45,13 @@ const addTodo = async (req, res) => {
 const updateTodo = async (req, res) => {
   const {title, description} = req.body;
   const { _id } = req.params;
-  if (!title && !description) {
-    return res.status(400).json({ error: "title and description both are required" });
-  }
+  
+  if (!_id || !isValidObjectId(_id)) {
+    console.log(_id);
+    console.log("it is not a valid object id");
+    return res.status(400).json({ error: "Invalid Object ID" });
+}
+
 
   try {
     const updatedTodo = await Todo.findByIdAndUpdate(

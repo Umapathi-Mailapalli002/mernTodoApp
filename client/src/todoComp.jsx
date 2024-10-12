@@ -1,49 +1,68 @@
 import React from "react";
 import { useState, useEffect } from "react";
+import axios from "axios";
 import { MdDeleteOutline } from "react-icons/md";
 import { FaCheck } from "react-icons/fa6";
 import { FaEdit } from "react-icons/fa";
 import { useRef } from "react";
-
+import {addTodo, deleteTodo, fetchTodos, updateTodo} from "./api"
 function todoComp() {
   const [activeButton, setActiveButton] = useState("todo");
-  const [inputTitle, setInputTitle] = useState("");
-  const [inputDes, setInputDes] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [showUpdate, setShowUpdate] = useState(false);
   const [todos, setTodos] = useState([]);
   const [isCompleted, setIsCompleted] = useState([]);
   const editInput = useRef(null);
   const [editId, setEditId] = useState(null);
+
   // access the inputs
   const handleChangeTitle = (e) => {
-    setInputTitle(e.target.value);
+    setTitle(e.target.value);
   };
 
   const handleChangeDes = (e) => {
-    setInputDes(e.target.value);
+    setDescription(e.target.value);
   };
-  useEffect(() => {
-    
-
-  }, []);
-
+  
+  const loadTodos = async () => {
+    try {
+      const res = await fetchTodos();
+      const todos = res.data;
+      if (!todos.isCompleted) {
+        setTodos(todos);
+      }
+      
+    } catch (error) {
+      console.log("error on fetching todos", error);
+      throw error
+    }
+  }
   console.log(todos);
   // handle the click button add
-  const handleAdd = (e) => {
+  const handleAdd = async(e) => {
     e.preventDefault();
-    if (inputTitle.trim() !== "" && inputDes.trim() !== "") {
-      
-      setInputTitle("");
-      setInputDes("");
+    try {
+      const addtodo = await addTodo(title, description);
+      if (title.trim() !== "" && description.trim() !== "") {
+        setTodos((prev) => [{...addtodo}, ...prev]);
+        
+      }
+      loadTodos();
+      setTitle("");
+        setDescription("");
+    } catch (error) {
+      console.log("error on adding todo", error);
+      throw error;
     }
   };
 
   //edit todo
-  const handleEdit = (id) => {
-    const editItem = todos.find((todo) => todo.id === id);
+  const handleEdit = async(id, title, description) => {
+    const editItem = await updateTodo(id, title, description) 
     // setting the text into to input boxes on clicking on the edit button
-    setInputTitle(editItem.inputTitle);
-    setInputDes(editItem.inputDes);
+    setTitle(title);
+    setDescription(description);
 
     //update button
     setShowUpdate(true);
@@ -52,27 +71,26 @@ function todoComp() {
     editInput.current.focus();
 
     // save editId in state
-    setEditId(editItem);
+    setEditId(id);
   };
 
   //update todo
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     // Assuming you have some state to store the updated todos and input values
-    const id = editId.id;
-    updateDoc(doc(db, "todos", id), {
-      title: inputTitle,
-      description: inputDes,
-    });
-
+    const id = editId;
+ await handleEdit(id, title, description);
     // Reset input values and hide update button
-    setInputTitle("");
-    setInputDes("");
+    setTitle("");
+    setDescription("");
     setShowUpdate(false);
+    loadTodos();
+
   };
 
   //delete todo
-  const handleDelete = (id) => {
-    deleteDoc(doc(db, "todos", id));
+  const handleDelete = async(id) => {
+    await deleteTodo(id);
+    loadTodos();
   };
 
   //mark as complete todo
@@ -88,11 +106,7 @@ function todoComp() {
       dd + "-" + mm + "-" + yyyy + " at " + h + ":" + m + ":" + s;
     const completedTodos = todos.find((todo) => todo.id === id);
     if (completedTodos) {
-      addDoc(collection(db, "isCompleted"), {
-        title: completedTodos.inputTitle,
-        description: completedTodos.inputDes,
-        completedOn: completedOn,
-      });
+      
     }
     handleDelete(id);
   };
@@ -112,6 +126,12 @@ function todoComp() {
 
 
   };
+
+  useEffect(() => {
+    
+   loadTodos();
+
+  }, []);
   return (
     <div
       id="todoWrapper"
@@ -126,7 +146,7 @@ function todoComp() {
             type="text"
             placeholder="What is your task title?"
             onChange={handleChangeTitle}
-            value={inputTitle}
+            value={title}
           />
         </div>
         <div className="sm:flex md:flex lg:flex sm:flex-col md:flex-col lg:flex-col sm:items-[flex-start] lg:items-[flex-start] md:items-[flex-start] sm:mr-6 md:mr-6 lg:mr-6 sm:mt-0 md:mt-0 lg:mt-0 mt-3 flex justify-center items-center ">
@@ -136,7 +156,7 @@ function todoComp() {
             type="text"
             placeholder="What is your task description?"
             onChange={handleChangeDes}
-            value={inputDes}
+            value={description}
           />
         </div>
         {!showUpdate && (
@@ -184,31 +204,28 @@ function todoComp() {
         </button>
       </div>
       {activeButton === "todo" &&
-        todos.map((item) => {
+        todos.map((todo) => {
           return (
-            <div key={item.id} className="todoo flex  bg-[#414040] shadow-xl">
+            <div key={todo._id} className="todoo flex  bg-[#414040] shadow-xl">
               <div className="bg-[#414040] flex  flex-col justify-between p-3 mb-[10px] w-[70vw]">
                 <h3 className="font-bold text-2xl text-[rgb(0,230,122)] m-0">
-                  {item.inputTitle}
+                  {todo.title}
                 </h3>
                 <p className="text-xs text-[161,161,161] mt-2">
-                  {item.inputDes}
+                  {todo.description}
                 </p>
               </div>
               <div className="flex justify-center items-center">
                 <FaEdit
-                  id={item.id}
-                  onClick={() => handleEdit(item.id)}
+                  onClick={() => handleEdit(todo._id, todo.title, todo.description)}
                   className="mx-1 text-xl cursor-pointer hover:text-[rgb(4,196,106)] sm:mr-2 md:mr-2 lg:mr-2"
                 />
                 <FaCheck
-                  onClick={() => handleComplete(item.id)}
-                  id={item.id}
+                  onClick={() => handleComplete(todo._id, todo.isCompleted)}
                   className="text-2xl cursor-pointer ml-1  text-[rgb(0,230,122)] hover:text-[rgb(4,196,106)] sm:mr-2 md:mr-2 lg:mr-2 mx-1"
                 />
                 <MdDeleteOutline
-                  onClick={() => handleDelete(item.id)}
-                  id={item.id}
+                  onClick={() => handleDelete(todo._id)}
                   className="text-2xl cursor-pointer hover:text-[rgb(4,196,106)] sm:mr-2 md:mr-2 lg:mr-2 mr-1"
                 />
               </div>
@@ -217,24 +234,24 @@ function todoComp() {
         })}
 
       {activeButton === "completed" &&
-        isCompleted.map((item) => {
+        isCompleted.map((todo) => {
           return (
-            <div key={item.id} className="todoo flex  bg-[#414040] shadow-xl">
+            <div key={todo._id} className="todoo flex  bg-[#414040] shadow-xl">
               <div className="bg-[#414040] flex  flex-col justify-between p-3 mb-[10px] w-[70vw]">
                 <h3 className="font-bold text-2xl text-[rgb(0,230,122)] m-0">
-                  {item.inputTitle}
+                  {todo.title}
                 </h3>
                 <p className="text-xs text-[161,161,161] mt-2">
-                  {item.inputDes}
+                  {todo.description}
                 </p>
                 <p className="text-xs text-[161,161,161] mt-2">
-                  <i>Completed on: {item.completedOn}</i>
+                  <i>Completed on: {todo.completedOn}</i>
                 </p>
               </div>
               <div className="flex justify-center items-center">
                 <MdDeleteOutline
-                  onClick={() => handleDeleteCompleted(item.id)}
-                  id={item.id}
+                  onClick={() => handleDeleteCompleted(todo._id)}
+                  id={todo._id}
                   className="text-3xl cursor-pointer hover:text-[rgb(4,196,106)] ml-8"
                 />
               </div>
