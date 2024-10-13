@@ -257,7 +257,6 @@ function todoComp() {
               <div className="flex justify-center items-center">
                 <MdDeleteOutline
                   onClick={() => handleDelete(todo._id)}
-                  id={todo._id}
                   className="text-3xl cursor-pointer hover:text-[rgb(4,196,106)] ml-8"
                 />
               </div>
