@@ -54,11 +54,23 @@ const deleteTodo = async(id) => {
    }
 }
 
+//toggle complete 
+const isComplete = async(id, isCompleted) => {
+   try {
+     const res = await axios.post(`${BASE_URL}/${TOGGLE_COMPLETE}/${id}`, {isCompleted});
+     return res.data;
+   } catch (error) {
+    console.log("error on toggling complete", error)
+    throw error;
+   }
+}
+
 //exports
 export {
     addTodo,
     fetchTodos,
     deleteTodo,
-    updateTodo
+    updateTodo,
+    isComplete
 }
 

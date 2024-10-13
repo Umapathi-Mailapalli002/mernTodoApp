@@ -3,7 +3,7 @@ import { Todo } from "../models/todo.model.js";
 
 const getAllTodos = async (req, res) => {
   try {
-    const todos = await Todo.find().sort({ createdAt:-1 });
+    const todos = await Todo.find().sort({ createdAt: -1 });
     if (!todos) {
       return res.status(200).json({ null: "there is no todo to fetch" });
     }
@@ -20,14 +20,16 @@ const getAllTodos = async (req, res) => {
 };
 
 const addTodo = async (req, res) => {
-  const {title, description} = req.body;
+  const { title, description } = req.body;
   try {
     if (!title && !description) {
-      return res.status(400).json({ error: "title and description both are required" });
+      return res
+        .status(400)
+        .json({ error: "title and description both are required" });
     }
     const todo = await Todo.create({
       title,
-      description
+      description,
     });
 
     return res.status(201).json({
@@ -43,14 +45,13 @@ const addTodo = async (req, res) => {
 };
 
 const updateTodo = async (req, res) => {
-  const {title, description} = req.body;
+  const { title, description } = req.body;
   const { _id } = req.params;
-  
+
   if (!_id || !isValidObjectId(_id)) {
     console.log("it is not a valid object id");
     return res.status(400).json({ error: "Invalid Object ID" });
-}
-
+  }
 
   try {
     const updatedTodo = await Todo.findByIdAndUpdate(
@@ -76,38 +77,38 @@ const updateTodo = async (req, res) => {
 
 const toggleIsComplete = async (req, res) => {
   try {
-    const {isCompleted} = req.body;
-    const toggleCompleted = Todo.findByIdAndUpdate(
-      {$set: {
-        isCompleted
-      }},
-      {new: true}
+    const { isCompleted } = req.body;
+    const { _id } = req.params;
+    const toggleCompleted = await Todo.findByIdAndUpdate(
+      _id,
+      {
+        $set: {
+          isCompleted,
+        }
+      },
+      { new: true }
     );
     if (!toggleCompleted) {
-      return res
-      .status(404)
-      .json({error: "todo not found to toggle"})
+      return res.status(404).json({ error: "todo not found to toggle" });
     }
     return res
-      .status(404)
-      .json({msg: "successfully toggled", data: toggleCompleted})
+      .status(200)
+      .json({ msg: "successfully toggled", data: toggleCompleted });
   } catch (error) {
-    return res
-    .status(500)
-    .json({error: "error on toogle isCompleted"})
+    return res.status(500).json({ error: "error on toogle isCompleted" });
   }
-}
+};
 
 const deleteTodo = async (req, res) => {
   const { _id } = req.params;
   try {
     const deletedTodo = await Todo.findByIdAndDelete(_id);
     if (!deletedTodo) {
-      return res
-      .status(404)
-      .json({ error: "not found todo" });
+      return res.status(404).json({ error: "not found todo" });
     }
-    return res.status(200).json({ msg: "Todo successfully deleted", data: deletedTodo });
+    return res
+      .status(200)
+      .json({ msg: "Todo successfully deleted", data: deletedTodo });
   } catch (error) {
     console.log("error on deleting todo", error);
     return res

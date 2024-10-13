@@ -1,11 +1,10 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { MdDeleteOutline } from "react-icons/md";
 import { FaCheck } from "react-icons/fa6";
 import { FaEdit } from "react-icons/fa";
 import { useRef } from "react";
-import {addTodo, deleteTodo, fetchTodos, updateTodo} from "./api"
+import { addTodo, deleteTodo, fetchTodos, isComplete, updateTodo } from "./api";
 function todoComp() {
   const [activeButton, setActiveButton] = useState("todo");
   const [title, setTitle] = useState("");
@@ -24,33 +23,35 @@ function todoComp() {
   const handleChangeDes = (e) => {
     setDescription(e.target.value);
   };
-  
-  const loadTodos = async () => {
+
+  const loadAllTodos = async () => {
     try {
       const res = await fetchTodos();
       const todos = res.data;
-      if (!todos.isCompleted) {
-        setTodos(todos);
+      const inCompletedTodos = todos.filter((todo) => !todo.isCompleted);
+      const CompletedTodos = todos.filter((todo) => todo.isCompleted);
+      if (inCompletedTodos) {
+        setTodos(inCompletedTodos);
       }
-      
+      if (CompletedTodos) {
+        setIsCompleted(CompletedTodos);
+      }
     } catch (error) {
       console.log("error on fetching todos", error);
-      throw error
+      throw error;
     }
-  }
-  console.log(todos);
+  };
   // handle the click button add
-  const handleAdd = async(e) => {
+  const handleAdd = async (e) => {
     e.preventDefault();
     try {
       const addtodo = await addTodo(title, description);
       if (title.trim() !== "" && description.trim() !== "") {
-        setTodos((prev) => [{...addtodo}, ...prev]);
-        
+        setTodos((prev) => [{ ...addtodo }, ...prev]);
       }
-      loadTodos();
+      loadAllTodos();
       setTitle("");
-        setDescription("");
+      setDescription("");
     } catch (error) {
       console.log("error on adding todo", error);
       throw error;
@@ -58,8 +59,8 @@ function todoComp() {
   };
 
   //edit todo
-  const handleEdit = async(id, title, description) => {
-    const editItem = await updateTodo(id, title, description) 
+  const handleEdit = async (id, title, description) => {
+    const editItem = await updateTodo(id, title, description);
     // setting the text into to input boxes on clicking on the edit button
     setTitle(title);
     setDescription(description);
@@ -78,60 +79,51 @@ function todoComp() {
   const handleUpdate = async () => {
     // Assuming you have some state to store the updated todos and input values
     const id = editId;
- await handleEdit(id, title, description);
+    await handleEdit(id, title, description);
     // Reset input values and hide update button
     setTitle("");
     setDescription("");
     setShowUpdate(false);
-    loadTodos();
-
+    loadAllTodos();
   };
 
   //delete todo
-  const handleDelete = async(id) => {
+  const handleDelete = async (id) => {
     await deleteTodo(id);
-    loadTodos();
+    loadAllTodos();
   };
 
   //mark as complete todo
-  const handleCompleteToogle = (id, isCompleted) => {
-    let now = new Date();
-    let dd = now.getDate();
-    let mm = now.getMonth();
-    let yyyy = now.getFullYear();
-    let h = now.getHours();
-    let m = now.getMinutes();
-    let s = now.getSeconds();
-    const completedOn =
-      dd + "-" + mm + "-" + yyyy + " at " + h + ":" + m + ":" + s;
-      const matchid = id;
-    const completedTodos = todos.find((todo) => todo._id === matchid);
-    if (completedTodos) {
-      completedTodos.isCompleted = true;
+  const handleCompleteToggle = async (id, isCompleted) => {
+    // Toggle the completion status
+    const isCompleteTodo = !isCompleted;
+    
+    try {
+      // Call your API to update the todo
+      await isComplete(id, isCompleteTodo);
+      
+      // After successfully toggling, reload the todos to refresh the UI
+      loadAllTodos();
+    } catch (error) {
+      console.error('Error toggling complete:', error);
+      // Handle the error appropriately (e.g., show a notification)
     }
-    console.log(isCompleted)
   };
-
+  
   //todo tasks
   const todoTask = () => {
     setActiveButton("todo");
+    loadAllTodos();
   };
 
   //completed Tasks
   const completedTask = () => {
     setActiveButton("completed");
-  };
-
-  //delete completed todo
-  const handleDeleteCompleted = (id) => {
-
-
+    loadAllTodos();
   };
 
   useEffect(() => {
-    
-   loadTodos();
-
+    loadAllTodos();
   }, []);
   return (
     <div
@@ -218,11 +210,15 @@ function todoComp() {
               </div>
               <div className="flex justify-center items-center">
                 <FaEdit
-                  onClick={() => handleEdit(todo._id, todo.title, todo.description)}
+                  onClick={() =>
+                    handleEdit(todo._id, todo.title, todo.description)
+                  }
                   className="mx-1 text-xl cursor-pointer hover:text-[rgb(4,196,106)] sm:mr-2 md:mr-2 lg:mr-2"
                 />
                 <FaCheck
-                  onClick={() => handleCompleteToogle(todo._id, todo.isCompleted)}
+                  onClick={() =>
+                    handleCompleteToggle(todo._id, todo.isCompleted)
+                  }
                   className="text-2xl cursor-pointer ml-1  text-[rgb(0,230,122)] hover:text-[rgb(4,196,106)] sm:mr-2 md:mr-2 lg:mr-2 mx-1"
                 />
                 <MdDeleteOutline
@@ -236,6 +232,15 @@ function todoComp() {
 
       {activeButton === "completed" &&
         isCompleted.map((todo) => {
+          let now = new Date();
+          let dd = now.getDate();
+          let mm = now.getMonth();
+          let yyyy = now.getFullYear();
+          let h = now.getHours();
+          let m = now.getMinutes();
+          let s = now.getSeconds();
+          const completedOn =
+            dd + "-" + mm + "-" + yyyy + " at " + h + ":" + m + ":" + s;
           return (
             <div key={todo._id} className="todoo flex  bg-[#414040] shadow-xl">
               <div className="bg-[#414040] flex  flex-col justify-between p-3 mb-[10px] w-[70vw]">
@@ -246,12 +251,12 @@ function todoComp() {
                   {todo.description}
                 </p>
                 <p className="text-xs text-[161,161,161] mt-2">
-                  <i>Completed on: {todo.completedOn}</i>
+                  <i>Completed on: {completedOn}</i>
                 </p>
               </div>
               <div className="flex justify-center items-center">
                 <MdDeleteOutline
-                  onClick={() => handleDeleteCompleted(todo._id)}
+                  onClick={() => handleDelete(todo._id)}
                   id={todo._id}
                   className="text-3xl cursor-pointer hover:text-[rgb(4,196,106)] ml-8"
                 />
